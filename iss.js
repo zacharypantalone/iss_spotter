@@ -18,16 +18,12 @@ const fetchMyIP = function(callback) {
     }
 
     callback(null, JSON.parse(body));
-
-    
   });
 };
 
-
-
+    
 const fetchCoordsByIP = function(ip, callback) {
-  
-  const coordinateAPI = `https://freegeoip.app/json/${ip}?apikey=F4u9CLCdegKCpG9cNAiYtBvXDXQPHWxgUEQiEcM5`;
+  const coordinateAPI = `https://freegeoip.app/json/${ip.ip}?apikey=F4u9CLCdegKCpG9cNAiYtBvXDXQPHWxgUEQiEcM5`;
   
   request(coordinateAPI, (error, response, body) => {
 
@@ -47,20 +43,15 @@ const fetchCoordsByIP = function(ip, callback) {
     }
 
     callback(null, {long, lat});
-
-
-
-    
   });
 };
-
+  
 
 const fetchISSFlyOverTimes = function(coords, callback) {
-  const flyOverAPI = `https://iss-pass.herokuapp.com/json/?lat=${coords.latitude}&lon=${coords.longitude}`;
-
+  const flyOverAPI = `https://iss-pass.herokuapp.com/json/?lat=${coords.lat}&lon=${coords.long}`;
+  
   request(flyOverAPI, (error, response, body) => {
     
-
     if (error) {
       callback(error, null);
       return;
@@ -72,16 +63,34 @@ const fetchISSFlyOverTimes = function(coords, callback) {
       return;
     }
     const data = JSON.parse(body);
-    //console.log(data);
-
+    
     callback(null,data);
   });
-
-  
-
 };
 
-module.exports = { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes };
 
+const nextISSTimesForMyLocation = function(callback) {
+  
+  fetchMyIP((error, ip) => {
+    if (error) {
+      return callback(error, null);
+    }
 
+    fetchCoordsByIP(ip, (error, location) => {
+      if (error) {
+        return callback(error, null);
+      }
 
+      fetchISSFlyOverTimes(location, (error, passes) => {
+        if (error) {
+          return callback(error, null);
+        }
+
+        callback(null, passes);
+      });
+    });
+  });
+};
+    
+
+module.exports = { nextISSTimesForMyLocation };
